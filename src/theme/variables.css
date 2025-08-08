@@ -1,0 +1,18 @@
+:root {
+  --ion-color-primary: #00bfa6; /* Turquesa */
+  --ion-color-primary-rgb: 0, 191, 166;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #00a58f;
+  --ion-color-primary-tint: #26c7b4;
+}
+
+body {
+  background-color: #121212;
+  color: white;
+}
+
+body.light {
+  background-color: #ffffff;
+  color: black;
+}
