@@ -1,39 +1,63 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonButton,
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonButton, IonImg, IonInput, IonItem, IonLabel
 } from "@ionic/react";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { Capacitor } from "@capacitor/core";
 
 export default function Perfil() {
-  const [isLight, setIsLight] = useState(false);
+  const [fotoPerfil, setFotoPerfil] = useState(null);
+  const [nombre, setNombre] = useState("");
+  const [correo, setCorreo] = useState("");
+  const fileInputRef = useRef(null);
 
-  // Al cargar la página, lee preferencia guardada
+  // Cargar datos guardados
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme_light");
-    if (storedTheme === "1") {
-      document.body.classList.add("light");
-      setIsLight(true);
-    }
+    const savedPhoto = localStorage.getItem("fotoPerfil");
+    const savedNombre = localStorage.getItem("nombrePerfil");
+    const savedCorreo = localStorage.getItem("correoPerfil");
+    if (savedPhoto) setFotoPerfil(savedPhoto);
+    if (savedNombre) setNombre(savedNombre);
+    if (savedCorreo) setCorreo(savedCorreo);
   }, []);
 
-  // Alternar tema y guardar en localStorage
-  const toggleTheme = () => {
-    if (isLight) {
-      document.body.classList.remove("light");
-      localStorage.setItem("theme_light", "0");
+  const savePhoto = (dataUrl) => {
+    setFotoPerfil(dataUrl);
+    localStorage.setItem("fotoPerfil", dataUrl);
+  };
+
+  const cambiarFoto = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: true,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Prompt
+        });
+        savePhoto(image.dataUrl);
+      } catch (err) {
+        console.log("Error al tomar foto:", err);
+      }
     } else {
-      document.body.classList.add("light");
-      localStorage.setItem("theme_light", "1");
+      fileInputRef.current.click();
     }
-    setIsLight(!isLight);
+  };
+
+  const onFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => savePhoto(event.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const guardarPerfil = () => {
+    localStorage.setItem("nombrePerfil", nombre);
+    localStorage.setItem("correoPerfil", correo);
+    alert("Perfil guardado correctamente ✅");
   };
 
   return (
@@ -44,21 +68,33 @@ export default function Perfil() {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
-        <IonCard>
-          <IonCardHeader>
-            <IonCardTitle>Mi Perfil</IonCardTitle>
-          </IonCardHeader>
-          <IonCardContent>
-            <p>
-              Bienvenido a tu perfil de la <strong>Prepa App</strong>.  
-              Aquí puedes personalizar tu experiencia, incluyendo el tema de la interfaz.
-            </p>
-            <IonButton expand="block" onClick={toggleTheme}>
-              Cambiar a {isLight ? "Tema Oscuro" : "Tema Claro"}
-            </IonButton>
-          </IonCardContent>
-        </IonCard>
+      <IonContent className="ion-text-center ion-padding">
+        {fotoPerfil ? (
+          <IonImg src={fotoPerfil} style={{ width: "200px", margin: "0 auto", borderRadius: "50%" }} />
+        ) : (
+          <p>No hay foto de perfil</p>
+        )}
+
+        <IonButton onClick={cambiarFoto}>Cambiar Foto</IonButton>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={onFileChange}
+        />
+
+        <IonItem>
+          <IonLabel position="floating">Nombre</IonLabel>
+          <IonInput value={nombre} onIonChange={(e) => setNombre(e.detail.value)} />
+        </IonItem>
+
+        <IonItem>
+          <IonLabel position="floating">Correo</IonLabel>
+          <IonInput type="email" value={correo} onIonChange={(e) => setCorreo(e.detail.value)} />
+        </IonItem>
+
+        <IonButton expand="block" onClick={guardarPerfil}>Guardar Perfil</IonButton>
       </IonContent>
     </IonPage>
   );

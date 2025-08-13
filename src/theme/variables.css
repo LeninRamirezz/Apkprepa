@@ -16,3 +16,12 @@ body.light {
   background-color: #ffffff;
   color: black;
 }
+
+ion-tab-bar {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+ion-tab-button {
+  flex: 0 0 auto;
+}
